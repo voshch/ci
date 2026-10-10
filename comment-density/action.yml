@@ -1,0 +1,31 @@
+name: comment density
+description: Warn when the lines a pull request adds have more comments than the repo baseline
+
+inputs:
+  base:
+    description: Revision the change is measured against
+    default: ${{ github.event.pull_request.base.sha }}
+  head:
+    description: Revision that contains the change
+    default: HEAD
+  ratio:
+    description: Warn when the added density exceeds this many times the baseline
+    default: "1.5"
+  floor:
+    description: Never warn at or below this percent density, whatever the ratio
+    default: "5"
+  min-lines:
+    description: Judge only files and totals with at least this many added non-blank lines
+    default: "40"
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        BASE: ${{ inputs.base }}
+        HEAD: ${{ inputs.head }}
+        RATIO: ${{ inputs.ratio }}
+        FLOOR: ${{ inputs.floor }}
+        MIN_LINES: ${{ inputs.min-lines }}
+      run: python3 "${{ github.action_path }}/comment_density.py" --base "$BASE" --head "$HEAD" --ratio "$RATIO" --floor "$FLOOR" --min-lines "$MIN_LINES"
