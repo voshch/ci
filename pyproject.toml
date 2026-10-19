@@ -8,4 +8,4 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["comment-density"]
+pythonpath = ["comment-density", "trial-merge"]

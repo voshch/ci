@@ -1,0 +1,38 @@
+name: trial merge
+description: Check out a change merged into its base, merging conflicting submodule pins, and fail only on conflicts outside them
+
+inputs:
+  base:
+    description: Branch the change merges into, empty to test the change as is. A push to this branch itself is tested as is
+    default: ${{ github.base_ref }}
+  head:
+    description: Revision that contains the change
+    default: ${{ github.event.pull_request.head.sha || github.sha }}
+  submodules:
+    description: Submodules to check out after the merge, false, true or recursive
+    default: "false"
+
+outputs:
+  base:
+    description: Commit the change was merged into, empty when it was tested as is
+    value: ${{ steps.merge.outputs.base }}
+  head:
+    description: Commit that contains the change
+    value: ${{ steps.merge.outputs.head }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v6
+      with:
+        ref: ${{ inputs.head }}
+        fetch-depth: 0
+        filter: blob:none
+    - id: merge
+      shell: bash
+      env:
+        BASE: ${{ inputs.base }}
+        SUBMODULES: ${{ inputs.submodules }}
+      run: |
+        if [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF" = "refs/heads/$BASE" ]; then BASE=; fi
+        python3 "$GITHUB_ACTION_PATH/trial_merge.py" --base "$BASE" --submodules "$SUBMODULES"
